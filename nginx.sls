@@ -1,39 +1,40 @@
-nginx-package-installed:
+# Install nginx package
+install_nginx:
   pkg.installed:
     - name: nginx
 
-create-web-example-directory:
+# Create directory for static content
+create_directory:
   file.directory:
     - name: /var/www/html/web-example
     - mode: 0755
 
-create-index-html-file:
+# Create "index.html" file with "hello world" content
+create_index_html:
   file.managed:
-    - name: /var/www/html/hello-world/index.html
-    - source: salt://module_name/index.html
+    - name: /var/www/html/web-example/index.html
+    - source: salt://path/to/index.html.j2
     - template: jinja
     - context:
-        hostname: {{ grains['host'] }}
+        node: {{ grains['id'] }}
     - mode: 0644
 
-copy-index-html-file:
+# Copy "index.html" to default Nginx location
+copy_index_html:
   file.managed:
     - name: /var/www/html/index.html
-    - source: /var/www/html/hello-world/index.html
+    - source: /var/www/html/web-example/index.html
     - mode: 0644
-    - require:
-      - file: create-index-html-file
 
-link-nginx-configuration:
-  file.symlink:
-    - target: /etc/nginx/sites-available/default
-    - name: /etc/nginx/sites-enabled/default
-    - require:
-      - pkg: nginx-package-installed
+# Declare correct path for the web
+update_nginx_conf:
+  file.append:
+    - name: /etc/nginx/nginx.conf
+    - text: '       root         /var/www/html/;'
 
-restart-nginx:
+# Restart Nginx
+restart_nginx:
   service.running:
     - name: nginx
-    - enable: True
     - watch:
-      - file: link-nginx-configuration
+      - file: update_nginx_conf

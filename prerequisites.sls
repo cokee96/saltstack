@@ -1,19 +1,22 @@
-install-prerequisites:
+# Install prerequisites packages at the latest version
+install_prerequisites:
   pkg.installed:
     - names:
-        - httpd
-        - nodejs
-        - npm
-        - mysql-server
+      - httpd
+      - git
+      - python3
+      - python3-pip
+      - nodejs
+      - npm
 
-start-services:
+# Start services after installation
+start_services:
   service.running:
-    - names: 
-        - httpd
-        - git
-        - python3
-        - python3-pip
-        - nodejs
-        - npm
-        - mysql-server
-    - enable: True
+    - name: {{ item }}
+    - enabled: True
+    - watch:
+      - pkg: install_prerequisites
+    - require:
+      - pkg: install_prerequisites
+  for:
+    - httpd
