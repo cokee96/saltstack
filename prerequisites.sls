@@ -12,11 +12,9 @@ install_prerequisites:
 # Start services after installation
 start_services:
   service.running:
-    - name: {{ item }}
+    - name: httpd
     - enabled: True
     - watch:
       - pkg: install_prerequisites
     - require:
       - pkg: install_prerequisites
-  for:
-    - httpd
