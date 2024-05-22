@@ -28,22 +28,11 @@ copy_index_html:
 
 # Declare correct path for the web
 update_nginx_conf:
-  file.managed:
+  file.replace:
     - name: /etc/nginx/nginx.conf
-    - source: salt://path/to/nginx.conf.j2
-    - template: jinja
-    - contents_pillar: False
-    - replace: True
-    - contents: |
-        {% set new_root = '/var/www/html/' %}
-        {% for line in salt['file'].get_contents('/etc/nginx/nginx.conf').split('\n') %}
-        {%   if line.strip().startswith('root') %}
-        root         {{ new_root }};
-        {%   else %}
-        {{ line }}
-        {%   endif %}
-        {% endfor %}
-        
+    - pattern: '^(\s*root\s+/usr/share/nginx/html;)'
+    - repl: '       root         /var/www/html/;'
+
 # Restart Nginx
 restart_nginx:
   service.running:
