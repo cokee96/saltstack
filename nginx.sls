@@ -13,7 +13,7 @@ create_directory:
 create_index_html:
   file.managed:
     - name: /var/www/html/web-example/index.html
-    - source: salt://path/to/index.html.j2
+    - source: salt://index.html.j2
     - template: jinja
     - context:
         node: {{ grains['id'] }}
