@@ -13,7 +13,7 @@ install_prerequisites:
 start_services:
   service.running:
     - name: httpd
-    - enabled: True
+    - enable: True
     - watch:
       - pkg: install_prerequisites
     - require:
