@@ -66,7 +66,7 @@ create_db_user:
 copy_database_dump_file:
   file.managed:
     - name: /tmp/nodes_email.sql.j2
-    - source: salt://path/to/nodes_email.sql.j2
+    - source: salt://nodes_email.sql.j2
     - mode: '0644'
 
 # Restore database
