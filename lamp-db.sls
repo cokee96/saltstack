@@ -27,11 +27,14 @@ restart_mariadb:
 
 # Create MariaDB log file
 create_mariadb_log_file:
-  file.touch:
+  file.managed:
     - name: /var/log/mysqld.log
     - mode: '0775'
     - user: mysql
     - group: mysql
+    - contents: ''  # archivo vacío
+    - require:
+      - pkg: install_mariadb
 
 # Create MariaDB PID directory
 create_mariadb_pid_directory:
