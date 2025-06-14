@@ -3,20 +3,12 @@ install_nginx:
   pkg.installed:
     - name: nginx
 
-# Ensure /var/www/html exists
-create_html_base:
-  file.directory:
-    - name: /var/www/html
-    - mode: 0755
-
-# Create directory for static content
+# Ensure /var/www/html/web-example
 create_directory:
   file.directory:
     - name: /var/www/html/web-example
     - mode: 0755
-    - require:
-      - file: create_html_base
-
+    - makedirs: True
 
 create_index_html:
   file.managed:
