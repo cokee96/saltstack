@@ -3,13 +3,21 @@ install_nginx:
   pkg.installed:
     - name: nginx
 
+# Ensure /var/www/html exists
+create_html_base:
+  file.directory:
+    - name: /var/www/html
+    - mode: 0755
+
 # Create directory for static content
 create_directory:
   file.directory:
     - name: /var/www/html/web-example
     - mode: 0755
+    - require:
+      - file: create_html_base
 
-# Create "index.html" file with "hello world" content
+
 create_index_html:
   file.managed:
     - name: /var/www/html/web-example/index.html
@@ -18,6 +26,9 @@ create_index_html:
     - context:
         node: {{ grains['id'] }}
     - mode: 0644
+    - require:
+      - file: create_directory
+
 
 # Copy "index.html" to default Nginx location
 copy_index_html:
