@@ -8,7 +8,6 @@ configure_selinux_mysql:
   selinux.boolean:
     - name: mysql_connect_any
     - value: True
-    - persistent: True
 
 restart_mariadb:
   service.running:
