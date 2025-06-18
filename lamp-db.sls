@@ -7,12 +7,11 @@ mariadb-server:
     - name: mariadb-server
 
 mariadb_bind_address:
-  file.line:
+  file.replace:
     - name: /etc/my.cnf.d/server.cnf
-    - mode: ensure
-    - content: 'bind-address = 0.0.0.0'
-    - match: '^bind-address\s*=.*'
-    - after: EOF
+    - pattern: '^bind-address\s*=.*'
+    - repl: 'bind-address = 0.0.0.0'
+    - append_if_not_found: True
     - require:
       - pkg: mariadb-server
     - watch_in:
