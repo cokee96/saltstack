@@ -41,14 +41,14 @@ create_mariadb_pid_directory:
 
 create_database:
   mysql_database.present:
-    - name: {{ pillar.get('lamp_db:dbname') }}
+    - name: {{ pillar.get('lamp_db:dbname', 'default_db') }}
     - require:
       - service: restart_mariadb
 
 create_db_user:
   mysql_user.present:
-    - name: {{ pillar.get('lamp_db:dbuser') }}
-    - password: {{ pillar.get('lamp_db:upassword') }}
+    - name: {{ pillar.get('lamp_db:dbuser', 'default_user') }}
+    - password: {{ pillar.get('lamp_db:upassword', 'default_pass') }}
     - host: '%'
     - privileges:
         - '*.*': 'ALL'
@@ -65,7 +65,7 @@ copy_database_dump_file:
 
 restore_database:
   mysql_database.import:
-    - name: {{ pillar.get('lamp_db:dbname') }}
+    - name: {{ pillar.get('lamp_db:dbname', 'default_db') }}
     - target: /tmp/nodes_email.sql
     - require:
         - file: copy_database_dump_file
