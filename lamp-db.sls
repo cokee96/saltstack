@@ -12,7 +12,7 @@ mariadb_bind_address:
     - mode: ensure
     - content: 'bind-address = 0.0.0.0'
     - match: '^bind-address\s*=.*'
-    - insert_if_not_found: True
+    - after: EOF
     - require:
       - pkg: mariadb-server
     - watch_in:
