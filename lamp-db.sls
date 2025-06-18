@@ -2,7 +2,7 @@ install_dependencies:
   pkg.installed:
     - pkgs:
       - mariadb-server
-      - MySQL-python  # Asegúrate de que esté disponible en tus repositorios
+      - MySQL-python
 
 configure_selinux_mysql:
   selinux.boolean:
@@ -44,12 +44,12 @@ start_mariadb:
 
 create_database:
   mysql_database.present:
-    - name: {{ dbname }}
+    - name: {{ pillar.get('lamp_db:dbname', 'default_dbname') }}
 
 create_db_user:
   mysql_user.present:
-    - name: {{ dbuser }}
-    - password: {{ upassword }}
+    - name: {{ pillar.get('lamp_db:dbuser', 'default_dbuser') }}
+    - password: {{ pillar.get('lamp_db:upassword', 'default_password') }}
     - host: '%'
     - privileges:
       - '*.*': 'ALL'
@@ -66,7 +66,7 @@ copy_database_dump_file:
 
 restore_database:
   mysql_database.import:
-    - name: {{ dbname }}
+    - name: {{ pillar.get('lamp_db:dbname', 'default_dbname') }}
     - target: /tmp/nodes_email.sql
     - require:
       - file: copy_database_dump_file
