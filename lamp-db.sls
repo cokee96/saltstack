@@ -30,7 +30,6 @@ mysql_connect_any_boolean:
   selinux.boolean:
     - name: mysql_connect_any
     - value: on
-    - persistent: True
 
 create_db:
   mysql_database.present:
