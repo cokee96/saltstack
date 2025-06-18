@@ -1,14 +1,11 @@
-{% set dbname = pillar.get('lamp_db:dbname') %}
-{% set dbuser = pillar.get('lamp_db:dbuser') %}
-{% set upassword = pillar.get('lamp_db:upassword') %}
-
 mariadb-server:
   pkg.installed:
     - name: mariadb-server
 
 pymysql:
-  pkg.installed:
-    - name: python3-PyMySQL
+  pip.installed:
+    - name: PyMySQL
+    - bin_env: /usr/bin/pip3
 
 mariadb_bind_address:
   file.replace:
@@ -27,7 +24,7 @@ mariadb-service:
       - file: mariadb_bind_address
     - require:
       - pkg: mariadb-server
-      - pkg: pymysql
+      - pip: pymysql
 
 mysql_connect_any_boolean:
   selinux.boolean:
@@ -70,4 +67,3 @@ restore_database:
     - require:
       - file: /tmp/nodes_email.sql
       - mysql_grants: grant_privileges
-
