@@ -8,8 +8,8 @@ install_dependencies:
   pkg.installed:
     - names:
       - mariadb-server
-      - python3-PyMySQL
-      - policycoreutils-python-utils  # o policycoreutils-python en CentOS/RHEL 7
+      - python36-PyMySQL
+      - policycoreutils-python
 
 # Crear archivo de log para MariaDB
 create_mariadb_log_file:
