@@ -2,12 +2,16 @@ install_dependencies:
   pkg.installed:
     - pkgs:
       - mariadb-server
-      - MySQL-python
+      - mariadb
+      # Intentar ambos, uno de los dos funcionará dependiendo del sistema
+      - python3-PyMySQL
+      - MySQL-python  # Si uno falla, Salt lo ignora silenciosamente si ya está instalado otro
 
 configure_selinux_mysql:
   selinux.boolean:
     - name: mysql_connect_any
     - value: True
+    - persist: True
 
 restart_mariadb:
   service.running:
@@ -43,12 +47,14 @@ start_mariadb:
 
 create_database:
   mysql_database.present:
-    - name: {{ pillar.get('lamp_db:dbname', 'default_dbname') }}
+    - name: {{ pillar['lamp_db']['dbname'] }}
+    - require:
+      - pkg: install_dependencies
 
 create_db_user:
   mysql_user.present:
-    - name: {{ pillar.get('lamp_db:dbuser', 'default_dbuser') }}
-    - password: {{ pillar.get('lamp_db:upassword', 'default_password') }}
+    - name: {{ pillar['lamp_db']['dbuser'] }}
+    - password: {{ pillar['lamp_db']['upassword'] }}
     - host: '%'
     - privileges:
       - '*.*': 'ALL'
@@ -65,7 +71,7 @@ copy_database_dump_file:
 
 restore_database:
   mysql_database.import:
-    - name: {{ pillar.get('lamp_db:dbname', 'default_dbname') }}
+    - name: {{ pillar['lamp_db']['dbname'] }}
     - target: /tmp/nodes_email.sql
     - require:
       - file: copy_database_dump_file
