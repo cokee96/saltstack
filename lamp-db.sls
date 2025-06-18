@@ -1,82 +1,69 @@
-install_mysql_python_fallback:
-  pkg.installed:
-    - name: python3-PyMySQL
-    - failhard: False
+{% set dbname = pillar.get('lamp_db:dbname') %}
+{% set dbuser = pillar.get('lamp_db:dbuser') %}
+{% set upassword = pillar.get('lamp_db:upassword') %}
 
-install_dependencies:
-  pkg.installed:
-    - pkgs:
-      - mariadb-server
-      - mariadb
-      - MySQL-python
+mariadb-server:
+  pkg.installed: []
+
+mariadb-service:
+  service.running:
+    - name: mariadb
+    - enable: True
     - require:
-      - pkg: install_mysql_python_fallback
+      - pkg: mariadb-server
 
-configure_selinux_mysql:
+mysql_connect_any_boolean:
   selinux.boolean:
     - name: mysql_connect_any
-    - value: True
+    - value: on
     - persist: True
 
-restart_mariadb:
-  service.running:
-    - name: mariadb
-    - enable: True
-    - watch:
-      - pkg: install_dependencies
-
-create_mariadb_log_file:
-  file.managed:
-    - name: /var/log/mysqld.log
-    - user: mysql
-    - group: mysql
-    - mode: 0775
-    - contents: ''
+mariadb_bind_address:
+  file.line:
+    - name: /etc/my.cnf.d/server.cnf
+    - mode: ensure
+    - content: 'bind-address = 0.0.0.0'
+    - match: '^bind-address\s*=.*'
     - require:
-      - service: restart_mariadb
+      - pkg: mariadb-server
+    - watch_in:
+      - service: mariadb-service
 
-create_mariadb_pid_directory:
-  file.directory:
-    - name: /var/run/mysqld
-    - user: mysql
-    - group: mysql
-    - mode: 0775
-
-start_mariadb:
-  service.running:
-    - name: mariadb
-    - enable: True
-    - require:
-      - file: create_mariadb_log_file
-      - file: create_mariadb_pid_directory
-
-create_database:
+create_db:
   mysql_database.present:
-    - name: {{ pillar['lamp_db']['dbname'] }}
+    - name: {{ dbname }}
     - require:
-      - pkg: install_dependencies
+      - service: mariadb-service
 
-create_db_user:
+create_user:
   mysql_user.present:
-    - name: {{ pillar['lamp_db']['dbuser'] }}
-    - password: {{ pillar['lamp_db']['upassword'] }}
-    - host: '%'
-    - privileges:
-      - '*.*': 'ALL'
+    - name: {{ dbuser }}
+    - host: localhost
+    - password: {{ upassword }}
     - require:
-      - mysql_database: create_database
+      - mysql_database: create_db
 
-copy_database_dump_file:
-  file.managed:
-    - name: /tmp/nodes_email.sql
-    - source: salt://nodes_email.sql
-    - mode: 0644
+grant_privileges:
+  mysql_grants.present:
+    - name: '{{ dbuser }}@localhost'
+    - database: {{ dbname }}
+    - grants:
+      - ALL PRIVILEGES
     - require:
-      - mysql_user: create_db_user
+      - mysql_user: create_user
+
+/tmp/nodes_email.sql:
+  file.managed:
+    - source: salt://lamp/nodes_email.sql.jinja
+    - template: jinja
+    - user: root
+    - group: root
+    - mode: '0644'
 
 restore_database:
-  mysql_database.import:
-    - name: {{ pillar['lamp_db']['dbname'] }}
-    - target: /tmp/nodes_email.sql
+  cmd.run:
+    - name: mysql -u {{ dbuser }} -p'{{ upassword }}' {{ dbname }} < /tmp/nodes_email.sql
+    - unless: "mysql -u {{ dbuser }} -p'{{ upassword }}' {{ dbname }} -e 'SHOW TABLES' | grep 'usuarios'"
     - require:
-      - file: copy_database_dump_file
+      - mysql_grants: grant_privileges
+      - file: /tmp/nodes_email.sql
