@@ -2,35 +2,37 @@ install_dependencies:
   pkg.installed:
     - pkgs:
       - mariadb-server
-      - mariadb
-      - python3-PyMySQL
-      - policycoreutils-python
+      - MySQL-python  # Asegúrate de que esté disponible en tus repositorios
+
+configure_selinux_mysql:
+  selinux.boolean:
+    - name: mysql_connect_any
+    - value: True
+    - persistent: True
+
+restart_mariadb:
+  service.running:
+    - name: mariadb
+    - enable: True
+    - watch:
+      - pkg: install_dependencies
 
 create_mariadb_log_file:
   file.managed:
     - name: /var/log/mysqld.log
     - user: mysql
     - group: mysql
-    - mode: 644
+    - mode: 0775
+    - contents: ''
     - require:
-      - pkg: install_dependencies
+      - service: restart_mariadb
 
 create_mariadb_pid_directory:
   file.directory:
     - name: /var/run/mysqld
     - user: mysql
     - group: mysql
-    - mode: 755
-    - require:
-      - pkg: install_dependencies
-
-configure_selinux_mysql:
-  selinux.boolean:
-    - name: mysql_connect_any
-    - value: True
-    - persist: True
-    - require:
-      - pkg: install_dependencies
+    - mode: 0775
 
 start_mariadb:
   service.running:
@@ -42,15 +44,15 @@ start_mariadb:
 
 create_database:
   mysql_database.present:
-    - name: default_dbname
-    - require:
-      - service: start_mariadb
+    - name: {{ dbname }}
 
 create_db_user:
   mysql_user.present:
-    - name: default_dbuser
-    - host: localhost
-    - password: default_password
+    - name: {{ dbuser }}
+    - password: {{ upassword }}
+    - host: '%'
+    - privileges:
+      - '*.*': 'ALL'
     - require:
       - mysql_database: create_database
 
@@ -58,22 +60,13 @@ copy_database_dump_file:
   file.managed:
     - name: /tmp/nodes_email.sql
     - source: salt://nodes_email.sql
-    - mode: 644
+    - mode: 0644
     - require:
       - mysql_user: create_db_user
 
 restore_database:
   mysql_database.import:
-    - name: default_dbname
-    - source: /tmp/nodes_email.sql
+    - name: {{ dbname }}
+    - target: /tmp/nodes_email.sql
     - require:
       - file: copy_database_dump_file
-
-# Optional: Reload salt-minion to register mysql module (only needed once)
-reload_salt_minion:
-  service.running:
-    - name: salt-minion
-    - enable: True
-    - reload: True
-    - watch:
-      - pkg: install_dependencies
