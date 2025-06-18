@@ -6,65 +6,68 @@ mariadb-server:
   pkg.installed:
     - name: mariadb-server
 
+pymysql:
+  pkg.installed:
+    - name: python3-PyMySQL
+
 mariadb_bind_address:
   file.replace:
     - name: /etc/my.cnf.d/server.cnf
-    - pattern: '^bind-address\s*=.*'
+    - pattern: '^bind-address.*'
     - repl: 'bind-address = 0.0.0.0'
     - append_if_not_found: True
     - require:
       - pkg: mariadb-server
-    - watch_in:
-      - service: mariadb-service
 
 mariadb-service:
   service.running:
     - name: mariadb
     - enable: True
-    - require:
+    - watch:
       - file: mariadb_bind_address
+    - require:
       - pkg: mariadb-server
+      - pkg: pymysql
 
 mysql_connect_any_boolean:
   selinux.boolean:
     - name: mysql_connect_any
-    - value: on
+    - value: True
+    - persist: True
 
 create_db:
   mysql_database.present:
-    - name: {{ dbname }}
+    - name: nodes_email
     - require:
       - service: mariadb-service
 
 create_user:
   mysql_user.present:
-    - name: {{ dbuser }}
+    - name: db_user
+    - password: db_password
     - host: localhost
-    - password: {{ upassword }}
     - require:
       - mysql_database: create_db
 
 grant_privileges:
   mysql_grants.present:
-    - name: {{ dbuser }}@localhost
-    - grant: ['ALL PRIVILEGES']
-    - database: {{ dbname }}
+    - grant: all privileges
+    - database: nodes_email.*
+    - user: db_user
+    - host: localhost
     - require:
       - mysql_user: create_user
 
 /tmp/nodes_email.sql:
   file.managed:
-    - source: salt://lamp/nodes_email.sql
-    - user: root
-    - group: root
-    - mode: '0644'
+    - source: salt://lamp-db/files/nodes_email.sql
     - require:
       - mysql_grants: grant_privileges
 
 restore_database:
   cmd.run:
-    - name: mysql -u {{ dbuser }} -p'{{ upassword }}' {{ dbname }} < /tmp/nodes_email.sql
-    - unless: mysql -u {{ dbuser }} -p'{{ upassword }}' {{ dbname }} -e "SHOW TABLES" | grep usuarios
+    - name: mysql -u db_user -p'db_password' nodes_email < /tmp/nodes_email.sql
     - require:
       - file: /tmp/nodes_email.sql
       - mysql_grants: grant_privileges
+
