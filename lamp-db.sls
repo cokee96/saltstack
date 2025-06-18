@@ -1,11 +1,16 @@
+install_mysql_python_fallback:
+  pkg.installed:
+    - name: python3-PyMySQL
+    - failhard: False
+
 install_dependencies:
   pkg.installed:
     - pkgs:
       - mariadb-server
       - mariadb
-      # Intentar ambos, uno de los dos funcionará dependiendo del sistema
-      - python3-PyMySQL
-      - MySQL-python  # Si uno falla, Salt lo ignora silenciosamente si ya está instalado otro
+      - MySQL-python
+    - require:
+      - pkg: install_mysql_python_fallback
 
 configure_selinux_mysql:
   selinux.boolean:
