@@ -36,22 +36,21 @@ create_db_and_user:
   cmd.run:
     - name: >
         mysql -uroot -p'{{ pillar.get('mysql_root_password', 'rootpass') }}' -e "
-        CREATE DATABASE IF NOT EXISTS nodes_email CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        CREATE USER IF NOT EXISTS 'db_user'@'localhost' IDENTIFIED BY 'db_password';
-        GRANT ALL PRIVILEGES ON nodes_email.* TO 'db_user'@'localhost';
+        CREATE DATABASE IF NOT EXISTS {{ pillar['lamp_db']['dbname'] }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+        CREATE USER IF NOT EXISTS '{{ pillar['lamp_db']['dbuser'] }}'@'localhost' IDENTIFIED BY '{{ pillar['lamp_db']['upassword'] }}';
+        GRANT ALL PRIVILEGES ON {{ pillar['lamp_db']['dbname'] }}.* TO '{{ pillar['lamp_db']['dbuser'] }}'@'localhost';
         FLUSH PRIVILEGES;"
     - require:
       - service: mariadb-service
 
 /tmp/nodes_email.sql:
   file.managed:
-    - source: salt://lamp-db/files/nodes_email.sql
+    - source: salt://nodes_email.sql
     - require:
-      - mysql_grants: grant_privileges
+      - cmd: create_db_and_user
 
 restore_database:
   cmd.run:
-    - name: mysql -u db_user -p'db_password' nodes_email < /tmp/nodes_email.sql
+    - name: mysql -u{{ pillar['lamp_db']['dbuser'] }} -p'{{ pillar['lamp_db']['upassword'] }}' {{ pillar['lamp_db']['dbname'] }} < /tmp/nodes_email.sql
     - require:
       - file: /tmp/nodes_email.sql
-      - mysql_grants: grant_privileges
