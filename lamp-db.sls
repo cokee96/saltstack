@@ -35,7 +35,7 @@ mysql_connect_any_boolean:
 create_db_and_user:
   cmd.run:
     - name: >
-        mysql -uroot -p'{{ pillar.get('mysql_root_password', 'rootpass') }}' -e "
+        mysql -uroot -e "
         CREATE DATABASE IF NOT EXISTS {{ pillar['lamp_db']['dbname'] }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
         CREATE USER IF NOT EXISTS '{{ pillar['lamp_db']['dbuser'] }}'@'localhost' IDENTIFIED BY '{{ pillar['lamp_db']['upassword'] }}';
         GRANT ALL PRIVILEGES ON {{ pillar['lamp_db']['dbname'] }}.* TO '{{ pillar['lamp_db']['dbuser'] }}'@'localhost';
@@ -45,12 +45,13 @@ create_db_and_user:
 
 /tmp/nodes_email.sql:
   file.managed:
-    - source: salt://nodes_email.sql
+    - source: salt://lamp-db/files/nodes_email.sql
     - require:
       - cmd: create_db_and_user
 
 restore_database:
   cmd.run:
-    - name: mysql -u{{ pillar['lamp_db']['dbuser'] }} -p'{{ pillar['lamp_db']['upassword'] }}' {{ pillar['lamp_db']['dbname'] }} < /tmp/nodes_email.sql
+    - name: >
+        mysql -u{{ pillar['lamp_db']['dbuser'] }} -p'{{ pillar['lamp_db']['upassword'] }}' {{ pillar['lamp_db']['dbname'] }} < /tmp/nodes_email.sql
     - require:
       - file: /tmp/nodes_email.sql
