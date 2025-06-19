@@ -45,7 +45,7 @@ create_db_and_user:
 
 /tmp/nodes_email.sql:
   file.managed:
-    - source: salt://lamp-db/files/nodes_email.sql
+    - source: salt://nodes_email.sql
     - require:
       - cmd: create_db_and_user
 
