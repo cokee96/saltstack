@@ -36,10 +36,12 @@ create_db_and_user:
   cmd.run:
     - name: >
         mysql -uroot -e "
-        CREATE DATABASE IF NOT EXISTS {{ pillar['lamp_db']['dbname'] }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        CREATE USER '{{ pillar['lamp_db']['dbuser'] }}'@'localhost' IDENTIFIED BY '{{ pillar['lamp_db']['upassword'] }}';
-        GRANT ALL PRIVILEGES ON {{ pillar['lamp_db']['dbname'] }}.* TO '{{ pillar['lamp_db']['dbuser'] }}'@'localhost';
-        FLUSH PRIVILEGES;"
+          CREATE DATABASE IF NOT EXISTS nodes_email CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          DROP USER IF EXISTS 'coke'@'localhost';
+          CREATE USER 'coke'@'localhost' IDENTIFIED BY '658078381';
+          GRANT ALL PRIVILEGES ON nodes_email.* TO 'coke'@'localhost';
+          FLUSH PRIVILEGES;
+        "
     - require:
       - service: mariadb-service
 
