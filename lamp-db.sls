@@ -37,7 +37,7 @@ create_db_and_user:
     - name: >
         mysql -uroot -e "
           CREATE DATABASE IF NOT EXISTS nodes_email CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-          DROP USER IF EXISTS 'coke'@'localhost';
+          DROP USER 'coke'@'localhost' || true;
           CREATE USER 'coke'@'localhost' IDENTIFIED BY '658078381';
           GRANT ALL PRIVILEGES ON nodes_email.* TO 'coke'@'localhost';
           FLUSH PRIVILEGES;
