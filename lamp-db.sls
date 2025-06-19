@@ -34,14 +34,12 @@ mysql_connect_any_boolean:
 
 create_db_and_user:
   cmd.run:
-    - name: >
-        mysql -uroot -e "
-          CREATE DATABASE IF NOT EXISTS nodes_email CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-          DROP USER 'coke'@'localhost' || true;
-          CREATE USER 'coke'@'localhost' IDENTIFIED BY '658078381';
-          GRANT ALL PRIVILEGES ON nodes_email.* TO 'coke'@'localhost';
-          FLUSH PRIVILEGES;
-        "
+    - name: |
+        mysql -uroot -e "CREATE DATABASE IF NOT EXISTS nodes_email CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+        mysql -uroot -e "DROP USER 'coke'@'localhost';" || true
+        mysql -uroot -e "CREATE USER 'coke'@'localhost' IDENTIFIED BY '658078381';"
+        mysql -uroot -e "GRANT ALL PRIVILEGES ON nodes_email.* TO 'coke'@'localhost';"
+        mysql -uroot -e "FLUSH PRIVILEGES;"
     - require:
       - service: mariadb-service
 
