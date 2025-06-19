@@ -32,28 +32,16 @@ mysql_connect_any_boolean:
     - value: True
     - persist: True
 
-create_db:
-  mysql_database.present:
-    - name: nodes_email
+create_db_and_user:
+  cmd.run:
+    - name: >
+        mysql -uroot -p'{{ pillar.get('mysql_root_password', 'rootpass') }}' -e "
+        CREATE DATABASE IF NOT EXISTS nodes_email CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+        CREATE USER IF NOT EXISTS 'db_user'@'localhost' IDENTIFIED BY 'db_password';
+        GRANT ALL PRIVILEGES ON nodes_email.* TO 'db_user'@'localhost';
+        FLUSH PRIVILEGES;"
     - require:
       - service: mariadb-service
-
-create_user:
-  mysql_user.present:
-    - name: db_user
-    - password: db_password
-    - host: localhost
-    - require:
-      - mysql_database: create_db
-
-grant_privileges:
-  mysql_grants.present:
-    - grant: all privileges
-    - database: nodes_email.*
-    - user: db_user
-    - host: localhost
-    - require:
-      - mysql_user: create_user
 
 /tmp/nodes_email.sql:
   file.managed:
