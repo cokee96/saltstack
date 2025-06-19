@@ -37,7 +37,7 @@ create_db_and_user:
     - name: >
         mysql -uroot -e "
         CREATE DATABASE IF NOT EXISTS {{ pillar['lamp_db']['dbname'] }} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        CREATE USER IF NOT EXISTS '{{ pillar['lamp_db']['dbuser'] }}'@'localhost' IDENTIFIED BY '{{ pillar['lamp_db']['upassword'] }}';
+        CREATE USER '{{ pillar['lamp_db']['dbuser'] }}'@'localhost' IDENTIFIED BY '{{ pillar['lamp_db']['upassword'] }}';
         GRANT ALL PRIVILEGES ON {{ pillar['lamp_db']['dbname'] }}.* TO '{{ pillar['lamp_db']['dbuser'] }}'@'localhost';
         FLUSH PRIVILEGES;"
     - require:
